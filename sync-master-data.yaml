@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-master-data
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: sync-master-data
+          image: postgres:11
+          command:
+            [
+              "sh",
+              "-c",
+              'PGPASSWORD="postgres" pg_basebackup -h postgres-master-svc -D /var/lib/slave-postgresql/data -U repuser -vP',
+            ]
+          volumeMounts:
+            - mountPath: /var/lib/slave-postgresql/data
+              name: postgres-data-slave
+              subPath: postgres
+      volumes:
+        - name: postgres-data-slave
+          persistentVolumeClaim:
+            claimName: postgres-data-slave
